@@ -1,9 +1,12 @@
 {
   "name": "tasklist-check",
-  "description": "tasklist.md が保存された時に未完了タスクの確認を促す。kiro-cli は使用しない。",
-  "trigger": {
-    "event": "file_save",
-    "filePattern": ".steering/**/tasklist.md"
+  "version": "1.0.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [".steering/**/tasklist.md"]
   },
-  "prompt": "tasklist.md が更新されました。未完了タスク（[ ]）が残っていないか確認してください。全タスクが [x] になるまで実装を継続することが原則です。未完了タスクがある場合は、次に実行すべきタスクを提示してください。"
+  "then": {
+    "type": "askAgent",
+    "prompt": "tasklist.md が更新されました。未完了タスク（[ ]）が残っていないか確認してください。全タスクが [x] になるまで実装を継続することが原則です。未完了タスクがある場合は、次に実行すべきタスクを提示してください。"
+  }
 }
