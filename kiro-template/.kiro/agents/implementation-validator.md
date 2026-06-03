@@ -1,6 +1,8 @@
 ---
 name: implementation-validator
 description: 実装コードの品質を検証し、スペックとの整合性を確認するサブエージェント
+model: claude-sonnet-4
+tools: ["read"]
 ---
 
 # 実装検証エージェント

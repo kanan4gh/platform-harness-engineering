@@ -1,6 +1,8 @@
 ---
 name: doc-reviewer
 description: ドキュメントの品質をレビューし、改善提案を行うサブエージェント
+model: claude-sonnet-4
+tools: ["read"]
 ---
 
 # ドキュメントレビューエージェント
