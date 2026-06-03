@@ -108,17 +108,19 @@ graph TB
 
 | Claude CLI 要素 | Kiro 対応要素 | 対応状態 | 備考 |
 |----------------|-------------|---------|------|
-| CLAUDE.md 汎用層（開発プロセス原則） | `.kiro/steering/process.md` | 完全移植 | inclusionMode: always |
-| CLAUDE.md プロダクト固有層 | `.kiro/steering/product.md` | 完全移植 | inclusionMode: always |
-| CLAUDE.md 技術スタック固有層 | `.kiro/steering/tech.md` | 完全移植 | inclusionMode: always |
-| `docs/` 永続ドキュメント群 | `docs/` | 完全移植 | 構造は同一 |
-| `.steering/YYYYMMDD-xxx/` 作業単位スペック | `.steering/YYYYMMDD-xxx/`（同一構造） | 完全移植 | Kiro built-in specs は使用しない（AWS AI-DLC の方針に準拠） |
-| `settings.json` hooks | `.kiro/hooks/` | 部分移植 | フック機能はあるが API が異なる |
-| `skills/` スキル群 | `.kiro/steering/process.md` に手順を記述 | 部分移植 | Kiro にスキル相当の独立機能なし |
-| `memory/` 永続メモリ | 代替手段あり | 未対応 | `docs/` への記述で代替 |
-| `.mcp.json` MCP 設定 | `.kiro/settings/mcp.json` | 完全移植 | パス・形式が異なる可能性あり |
-| devcontainer | **ハーネス対象外** | 除外 | プロジェクト固有で管理 |
-| kiro-cli | **使用しない** | 除外 | 全操作を Kiro GUI で完結 |
+| CLAUDE.md 汎用層（開発プロセス原則） | `.kiro/steering/process.md` | ✅ 完全移植 | inclusion: always |
+| CLAUDE.md プロダクト固有層 | `.kiro/steering/product.md` | ✅ 完全移植 | inclusion: always |
+| CLAUDE.md 技術スタック固有層 | `.kiro/steering/tech.md` | ✅ 完全移植 | inclusion: always |
+| `docs/` 永続ドキュメント群 | `docs/` | ✅ 完全移植 | 構造は同一 |
+| `.steering/YYYYMMDD-xxx/` 作業単位スペック | `.steering/YYYYMMDD-xxx/`（同一構造） | ✅ 完全移植 | Kiro built-in specs は使用しない |
+| `settings.json` hooks（fileEdited） | `.kiro/hooks/` (`when.type: fileEdited`) | ✅ 移植済み | tasklist-check.json |
+| `.mcp.json` MCP 設定 | `.kiro/settings/mcp.json` | ✅ 完全移植 | パス・形式が異なる |
+| `.claude/commands/` スラッシュコマンド | `.kiro/hooks/` (`when.type: userTriggered`) | 🔲 未実装 | Hook UI / コマンドパレットで手動起動。引数渡し不可のためプロンプト内で問い返す |
+| `.claude/skills/` on-demand 指示書 | `.kiro/steering/` (`inclusion: manual`) | 🔲 未実装 | チャットで `#ファイル名` と入力してロード |
+| `.claude/agents/` サブエージェント | `.kiro/agents/` カスタムエージェント | 🔲 未実装 | `@エージェント名` で呼び出し。`postTaskExecution` hook との併用可 |
+| `memory/` 永続メモリ | 代替手段のみ | ⚠️ 未対応 | `docs/` への記述で代替 |
+| devcontainer | **ハーネス対象外** | — | プロジェクト固有で管理 |
+| kiro-cli | **使用しない** | — | 全操作を Kiro GUI で完結 |
 
 ## コンポーネント設計
 

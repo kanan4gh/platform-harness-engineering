@@ -144,29 +144,100 @@ YYYYMMDD-[タスク名（英小文字・ハイフン区切り）]
 - フックはエージェントへの追加指示として機能させる
 - フック数は最小限に留め、必須でないものはテンプレートに含めない
 
-### フックファイルのフォーマット仕様
+### フックファイルのフォーマット仕様（受け入れテストで確認済み）
 
-Kiro のフックは JSON 形式で `.kiro/hooks/` に配置する。フック API は Kiro のバージョンに依存するため、テンプレートには最小限の例のみ含める。
+Kiro のフックは JSON 形式で `.kiro/hooks/` に配置する。
 
+**共通スキーマ**:
 ```json
 {
-  "name": "フック名",
-  "description": "フックの説明",
-  "trigger": {
-    "event": "イベント種別（file_save 等）",
-    "filePattern": "**/*.py"
+  "name": "string (required)",
+  "version": "string (required)",
+  "description": "string (optional)",
+  "when": {
+    "type": "fileEdited | userTriggered | postTaskExecution",
+    "patterns": ["glob (fileEdited の場合)"]
   },
-  "prompt": "エージェントへの指示テキスト"
+  "then": {
+    "type": "askAgent | runCommand",
+    "prompt": "string (askAgent の場合 required)",
+    "command": "string (runCommand の場合 required)"
+  }
 }
 ```
 
-### テンプレートに含めるフック（案）
+**トリガー種別**:
+
+| `when.type` | 説明 | `patterns` |
+|---|---|---|
+| `fileEdited` | 指定パターンのファイル保存時 | 必須（glob 配列） |
+| `userTriggered` | Hook UI / コマンドパレットから手動実行 | 不要 |
+| `postTaskExecution` | タスク完了後に自動実行 | 不要 |
+
+**`fileEdited` の例**（tasklist-check.json）:
+```json
+{
+  "name": "tasklist-check",
+  "version": "1.0.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [".steering/**/tasklist.md"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "..."
+  }
+}
+```
+
+**`userTriggered` の例**（ユーザーが手動起動するワークフロー）:
+```json
+{
+  "name": "add-feature",
+  "version": "1.0.0",
+  "description": "新機能の SDD フローを開始する",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "新機能の実装を SDD フローで開始します。まず機能名を教えてください。..."
+  }
+}
+```
+
+### カスタムエージェントのフォーマット仕様
+
+カスタムエージェントは `.kiro/agents/` ディレクトリに `.md` ファイルとして定義する。
+
+```markdown
+---
+name: エージェント名
+description: エージェントの役割説明
+---
+
+エージェントへのシステムプロンプト（役割・動作・出力形式を記述）
+```
+
+- チャットで `@エージェント名` と入力して呼び出す
+- `postTaskExecution` hook と組み合わせてタスク完了後に自動起動も可能
+
+### `inclusion` モードの使い分け
+
+| モード | 動作 | 用途 |
+|---|---|---|
+| `always` | 全会話に常時注入 | process.md・product.md 等のコアコンテキスト |
+| `manual` | チャットで `#ファイル名` と入力した時のみ読み込む | スキル相当の詳細ガイド（必要な時だけロード） |
+
+### テンプレートに含めるフック
 
 | フック名 | トリガー | 目的 |
 |---------|---------|------|
-| `tasklist-check.json` | `tasklist.md` 保存時 | 未完了タスクの確認促進 |
+| `tasklist-check.json` | `fileEdited` (.steering/**/tasklist.md) | 未完了タスクの確認促進 |
+| `add-feature.json` | `userTriggered` | SDD フルサイクルを起動 |
+| `setup-project.json` | `userTriggered` | docs/ 初期セットアップを起動 |
 
-> **注意**: フック API の詳細（利用可能なイベント種別・パラメータ）は Kiro のバージョンに依存する。テンプレートのフックは動作確認済みの最小構成のみとし、プロジェクト固有のフックはプロジェクト側で追加する。
+> **注意**: フック API の詳細は Kiro のバージョンに依存する。本スキーマは 2026-06-03 時点の受け入れテストで確認したもの。
 
 ## 永続ドキュメント層アーキテクチャ（`docs/`）
 
