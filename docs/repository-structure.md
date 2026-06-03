@@ -111,7 +111,9 @@ inclusion: always
 
 | ファイル | トリガー | 目的 |
 |---------|---------|------|
-| `tasklist-check.json` | `tasklist.md` 保存時 | 未完了タスクの確認を促す |
+| `tasklist-check.json` | `fileEdited` (.steering/**/tasklist.md) | 未完了タスクの確認を促す |
+| `add-feature.json` | `userTriggered` | SDD フルサイクルを起動 |
+| `setup-project.json` | `userTriggered` | docs/ 初期セットアップを起動 |
 
 **配置ルール**:
 - テンプレートに含めるフックは最小限（動作確認済みのもののみ）
