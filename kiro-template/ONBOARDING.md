@@ -36,12 +36,49 @@ Kiro エージェントを有効に活用するための「文脈注入・プロ
 
 ## 2. セットアップ
 
-### ステップ 1: テンプレートを複製する
+### ステップ 1: テンプレートを入手してリポジトリを作成する
 
-1. GitHub の **"Use this template"** ボタンで新しいリポジトリを作成する
-2. 作成したリポジトリを Kiro IDE で開く
+#### パターン A: 社内 GitHub Enterprise（GHE）に持ち込む場合
 
-Kiro を開くと `.kiro/steering/` 内のファイルが自動的に読み込まれます。
+社内ネットワークから一般 GitHub への直接アクセスが制限されている場合は以下の手順で持ち込みます。
+
+**1. zip をダウンロードする（HTTPS）**
+
+[Releases ページ](https://github.com/kanan4gh/platform-harness-for-kiro/releases/latest) から `kiro-harness-template.zip` をダウンロードします。
+
+**2. 社内 PC で展開・初期化する（PowerShell）**
+
+```powershell
+# zip を展開
+Expand-Archive kiro-harness-template.zip -DestinationPath .
+
+# 展開されたフォルダに移動
+cd kiro-template
+
+# git リポジトリとして初期化
+git init
+git add .
+git commit -m "chore: initial kiro harness template"
+```
+
+**3. 社内 GHE に push する**
+
+```powershell
+git remote add origin https://[社内GHEのホスト]/[org]/kiro-harness-template.git
+git push -u origin main
+```
+
+**4. Template Repository として設定する（任意）**
+
+GHE のリポジトリ Settings → General → 「Template repository」にチェックを入れると、チームメンバーが "Use this template" ボタンで自分のプロジェクトを作れるようになります。
+
+#### パターン B: 一般 GitHub から直接複製する場合
+
+GitHub の **"Use this template"** ボタンで新しいリポジトリを作成します。
+
+---
+
+**リポジトリを作成したら** Kiro IDE で開きます。`.kiro/steering/` 内のファイルが自動的に読み込まれます。
 
 ### ステップ 2: steering ファイルをカスタマイズする
 
