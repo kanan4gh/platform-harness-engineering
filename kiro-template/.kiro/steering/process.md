@@ -15,7 +15,7 @@ inclusion: always
 
 ```
 1. ドキュメント確認  : docs/ の永続ドキュメントで方針を確認
-2. Issue 作成       : GitHub Issue を作成（Web UI）
+2. Issue 作成       : GitHub Issue を作成（Web UI または `gh` コマンド）
 3. スペック作成     : .steering/_template/ をコピーして YYYYMMDD-xxx/ を作成
 4. 要求定義         : requirements.md を記入（Issue URL を必ず記載）
 5. 設計             : design.md を記入
@@ -44,10 +44,14 @@ inclusion: always
 
 ### スペック作成手順
 
-1. GitHub Issue を作成する（Web UI）
+1. GitHub Issue を作成する（Web UI または `gh` コマンド）
 2. `.steering/_template/` を Kiro GUI でコピーし `YYYYMMDD-[タスク名]/` として配置する
-3. `requirements.md` → `design.md` → `tasklist.md` の順で記入する
-4. Kiro エージェントに対してスペックファイルを明示的に指示して実装を開始する
+3. `requirements.md` を記入し、**ユーザーの確認を得てから** `design.md` に進む
+4. `design.md` を記入し、**ユーザーの確認を得てから** `tasklist.md` に進む
+5. `tasklist.md` を記入し、**ユーザーの確認を得てから**実装を開始する
+6. Kiro エージェントに対してスペックファイルを明示的に指示して実装を開始する
+
+> **重要**: 各ドキュメントは1ファイルずつ作成する。ユーザーが確認・承認するまで次のステップに進まない。
 
 ### tasklist.md の管理ルール
 
