@@ -1,0 +1,83 @@
+---
+inclusion: always
+---
+
+# 開発プロセス原則
+
+## 基本方針
+
+- **kiro-cli は使わない**: 全操作を Kiro IDE の GUI 内で完結させる。ターミナルや kiro-cli の手動実行を前提としない
+- **Kiro built-in specs は使わない**: Kiro が「Spec mode に切り替えますか？」と提示した場合は断る。作業単位のスペックは `.steering/YYYYMMDD-xxx/` 構造で管理する
+
+## スペック駆動開発（SDD）フロー
+
+全ての機能開発・バグ修正は以下のフローで行う:
+
+```
+1. ドキュメント確認  : docs/ の永続ドキュメントで方針を確認
+2. Issue 作成       : GitHub Issue を作成（Web UI）
+3. スペック作成     : .steering/_template/ をコピーして YYYYMMDD-xxx/ を作成
+4. 要求定義         : requirements.md を記入（Issue URL を必ず記載）
+5. 設計             : design.md を記入
+6. タスク計画       : tasklist.md を記入
+7. 実装             : tasklist.md のタスクを順番に実行・チェック
+8. PR 作成・マージ  : フィーチャーブランチ → PR → main へマージ
+9. リリース         : 必要に応じて GitHub Release を作成
+```
+
+## 作業スペックの使い方
+
+### ディレクトリ命名規則
+
+```
+.steering/
+├── _template/               # テンプレート（直接編集しない）
+├── 20250115-add-login/      # 機能実装単位（_template/ をコピーして作成）
+│   ├── requirements.md      # 要求仕様（関連 Issue URL を必須記入）
+│   ├── design.md            # 実装設計
+│   └── tasklist.md          # タスクリスト（進捗を随時チェック）
+└── 20250120-fix-auth-bug/
+    └── ...
+```
+
+命名規則: `YYYYMMDD-[タスク名（英小文字・ハイフン区切り）]`
+
+### スペック作成手順
+
+1. GitHub Issue を作成する（Web UI）
+2. `.steering/_template/` を Kiro GUI でコピーし `YYYYMMDD-[タスク名]/` として配置する
+3. `requirements.md` → `design.md` → `tasklist.md` の順で記入する
+4. Kiro エージェントに対してスペックファイルを明示的に指示して実装を開始する
+
+### tasklist.md の管理ルール
+
+- タスク開始時に `[ ]` → `[x]` へ更新する
+- **全タスクが `[x]` になるまで実装を継続する**
+- 「時間の都合により後回し」は禁止
+- 技術的理由でスキップする場合は理由を明記する
+
+## ドキュメント管理
+
+### 永続ドキュメント（`docs/`）
+
+- プロジェクト全体の「何を作るか」「どう作るか」を定義する
+- 頻繁に更新しない（変更は方針転換のシグナル）
+- 実装後に設計と実態が乖離していれば更新する
+
+### 作業スペック（`.steering/`）
+
+- 特定の作業に特化したドキュメント
+- 作業ごとに新規作成し、履歴として保持する（`.gitignore` に含めない）
+
+## PR・リリースフロー
+
+### PR 作成
+
+- `main` へ直接コミットしない（機能実装コードも含む）
+- フィーチャーブランチ → PR → マージ の手順を踏む
+- PR は GitHub Web UI または Kiro の Git 統合 UI で作成する
+
+### リリース
+
+- PR マージ後、必要に応じて GitHub Release を作成する（Web UI）
+- リリース前に関連 Issue をクローズする
