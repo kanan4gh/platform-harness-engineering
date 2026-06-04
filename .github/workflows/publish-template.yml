@@ -1,0 +1,72 @@
+name: Publish Template
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      template:
+        description: 'Template name to publish (e.g. kiro, codex)'
+        required: false
+        default: 'kiro'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Determine template name
+        id: template
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.template }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=kiro" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Clone output repo
+        env:
+          PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+        run: |
+          TEMPLATE="${{ steps.template.outputs.name }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
+          git clone "https://x-access-token:${PUBLISH_PAT}@github.com/kanan4gh/${OUTPUT_REPO}.git" /tmp/output-repo
+
+      - name: Copy template contents to output repo
+        run: |
+          TEMPLATE="${{ steps.template.outputs.name }}"
+          SOURCE_DIR="${TEMPLATE}-template"
+
+          # Copy all contents including dotfiles/directories
+          rsync -av --delete \
+            --exclude='.git' \
+            "${SOURCE_DIR}/" /tmp/output-repo/
+
+      - name: Commit and push
+        env:
+          PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+        run: |
+          TEMPLATE="${{ steps.template.outputs.name }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
+
+          cd /tmp/output-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "release" ]; then
+            MSG="chore: publish ${{ github.ref_name }}"
+          else
+            MSG="chore: publish template (manual dispatch)"
+          fi
+
+          git commit -m "${MSG}"
+          git push "https://x-access-token:${PUBLISH_PAT}@github.com/kanan4gh/${OUTPUT_REPO}.git" main
