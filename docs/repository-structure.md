@@ -1,16 +1,19 @@
 # リポジトリ構造定義書 (Repository Structure Document)
 
-## このリポジトリの構造（Bootstrap フェーズ）
+## このリポジトリの構造
 
-Bootstrap フェーズでは、このリポジトリ自体が「Claude Code を使って Kiro ハーネスを設計・実装する」作業環境となっています。2 つの層が共存しています。
+`platform-harness-engineering` は Kiro ハーネスの設計・開発・発行を行う作業場リポジトリです。2 つの層が共存しています。
 
 ```
-platform-harness-for-kiro/                    # リポジトリルート
+platform-harness-engineering/                 # リポジトリルート（作業場）
 ├── .claude/                                  # Claude Code 開発インフラ
 │   ├── agents/                              # サブエージェント定義
 │   ├── commands/                            # スラッシュコマンド定義
 │   └── skills/                              # スキル定義
 ├── .devcontainer/                            # Claude Code 開発環境（Kiro テンプレートには含まれない）
+├── .github/
+│   └── workflows/
+│       └── publish-template.yml             # kiro-template/ を platform-harness-for-kiro へ自動発行
 ├── .steering/                                # Claude Code 作業スペック（作業履歴）
 │   ├── YYYYMMDD-[タスク名]/                 # 作業単位ごとのスペック
 │   │   ├── requirements.md
@@ -39,9 +42,11 @@ platform-harness-for-kiro/                    # リポジトリルート
 
 | 層 | ディレクトリ | 説明 |
 |---|---|---|
-| Claude Code 開発インフラ | `.claude/`, `.devcontainer/`, `.steering/`, `CLAUDE.md` | Bootstrap フェーズの作業環境。Kiro ユーザーには配布しない |
-| Kiro テンプレート成果物 | `kiro-template/` | Kiro ユーザーに展開される成果物。このフォルダの中身がテンプレートとして配布される |
+| Claude Code 開発インフラ | `.claude/`, `.devcontainer/`, `.github/`, `.steering/`, `CLAUDE.md` | 作業場環境。Kiro ユーザーには配布しない |
+| Kiro テンプレート成果物 | `kiro-template/` | Kiro ユーザーに展開される成果物。リリース時に `platform-harness-for-kiro` へ自動発行される |
 | 共有 | `docs/`, `README.md`, `.gitignore` | このリポジトリの永続ドキュメントおよびルートファイル |
+
+**出力リポジトリ**: `kiro-template/` の内容は `gh release create` または `workflow_dispatch` 実行時に [platform-harness-for-kiro](https://github.com/kanan4gh/platform-harness-for-kiro) へ自動発行される。
 
 ---
 
