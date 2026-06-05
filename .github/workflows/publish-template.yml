@@ -45,6 +45,7 @@ jobs:
             "${SOURCE_DIR}/" /tmp/output-repo/
 
       - name: Commit and push
+        id: publish
         env:
           PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
         run: |
@@ -70,3 +71,25 @@ jobs:
 
           git commit -m "${MSG}"
           git push "https://x-access-token:${PUBLISH_PAT}@github.com/kanan4gh/${OUTPUT_REPO}.git" main
+          echo "published=true" >> $GITHUB_OUTPUT
+
+      - name: Create release on output repo
+        if: github.event_name == 'release'
+        env:
+          PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+        run: |
+          TEMPLATE="${{ steps.template.outputs.name }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
+
+          # コンテンツ差分なしでスキップされた場合はリリースも作成しない
+          if [ "${{ steps.publish.outputs.published }}" != "true" ]; then
+            echo "No content changes were published. Skipping release creation."
+            exit 0
+          fi
+
+          GH_TOKEN="${PUBLISH_PAT}" gh release create "${{ github.ref_name }}" \
+            --repo "kanan4gh/${OUTPUT_REPO}" \
+            --title "${{ github.ref_name }}: ${{ github.event.release.name }}" \
+            --notes "platform-harness-engineering ${{ github.ref_name }} に対応したテンプレートです。
+
+詳細なリリースノートは https://github.com/kanan4gh/platform-harness-engineering/releases/tag/${{ github.ref_name }} を参照してください。"
