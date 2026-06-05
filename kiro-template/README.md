@@ -48,29 +48,27 @@ GitHub の **"Use this template"** ボタンをクリックして、新しいリ
 
 作成したリポジトリを Kiro IDE で開きます。`.kiro/steering/` が自動的に読み込まれます。
 
-### 3. steering ファイルをカスタマイズする（必須）
+### 3. プロジェクトをセットアップする
 
-Kiro のファイルエクスプローラーから以下のファイルを編集します：
+チャットで以下を入力します：
 
-**`.kiro/steering/product.md`**
-- プロダクト名・ビジョン・目的を記入
-- `docs/` 配下のドキュメント一覧を更新
+```
+setup-project を実行してください
+```
 
-**`.kiro/steering/tech.md`**
-- 技術スタック（言語・フレームワーク・ツール）を記入
-- OS 別セットアップ手順を記入
+Kiro がプロダクトの概要・技術スタック・リポジトリ構造を対話的に確認しながら、`docs/` 配下の永続ドキュメント（6 ファイル）と `.kiro/steering/` ファイル（product.md / tech.md / structure.md）を自動で作成します。
 
-**`.kiro/steering/structure.md`**
-- プロジェクトのディレクトリ構造を記入
+> `.kiro/steering/process.md` はハーネス共通のルールブックです。`setup-project` では更新されません。
 
-> `.kiro/steering/process.md` はハーネス共通のルールブックです。通常は編集不要です。
+### 4. 最初の機能を実装する
 
-### 4. 最初の機能スペックを作成する
+`setup-project` が完了したら、チャットで以下を入力します：
 
-1. GitHub で Issue を作成する（Web UI）
-2. `.steering/_template/` を Kiro GUI でコピーし `YYYYMMDD-[機能名]/` として配置
-3. `requirements.md` → `design.md` → `tasklist.md` の順で記入
-4. Kiro エージェントにスペックファイルを示して実装を開始
+```
+add-feature を実行してください
+```
+
+Kiro が SDD フロー（requirements → design → tasklist → 実装 → PR）をガイドします。
 
 ## 注意事項
 
