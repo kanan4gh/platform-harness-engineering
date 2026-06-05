@@ -85,5 +85,5 @@ jobs:
 
           GH_TOKEN="${PUBLISH_PAT}" gh release create "${{ github.ref_name }}" \
             --repo "kanan4gh/${OUTPUT_REPO}" \
-            --title "${{ github.ref_name }}: ${{ github.event.release.name }}" \
+            --title "${{ github.event.release.name }}" \
             --notes "${RELEASE_NOTES}"
