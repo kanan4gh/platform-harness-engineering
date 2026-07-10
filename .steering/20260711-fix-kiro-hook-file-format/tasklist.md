@@ -25,8 +25,8 @@
 
 ## フェーズ3: 振り返り・PR
 
-- [ ] 実装後の振り返りを記録する
-- [ ] コミット・push・PR作成(`Closes #45`)・URL報告
+- [x] 実装後の振り返りを記録する
+- [x] コミット・push・PR作成(`Closes #45`)・URL報告(https://github.com/kanan4gh/platform-harness-engineering/pull/46)
 
 ---
 
