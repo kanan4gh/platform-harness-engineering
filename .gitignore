@@ -6,3 +6,6 @@ dist/
 .pytest_cache/
 .pyright/
 .claude/settings.local.json
+
+# フックの揮発状態(セッションローカル)
+.claude/hooks/state/
