@@ -83,10 +83,10 @@
 
 ## フェーズ7: コミットとPR作成
 
-- [ ] 変更をコミットする(Conventional Commits形式、本文に `Closes #40` を含める)
-- [ ] ブランチをpushする
-- [ ] `gh pr create --repo kanan4gh/platform-harness-engineering` でPRを作成する(本文: 概要・変更理由・変更内容・テスト結果・関連Issue)
-- [ ] PRのURLをユーザーに報告する
+- [x] 変更をコミットする(Conventional Commits形式、本文に `Closes #40` を含める)
+- [x] ブランチをpushする
+- [x] `gh pr create --repo kanan4gh/platform-harness-engineering` でPRを作成する(本文: 概要・変更理由・変更内容・テスト結果・関連Issue)
+- [x] PRのURLをユーザーに報告する
 
 ## フェーズ8: 振り返り
 
