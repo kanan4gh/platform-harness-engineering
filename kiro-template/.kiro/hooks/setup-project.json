@@ -1,12 +1,12 @@
 {
   "name": "setup-project",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "新規プロジェクトの docs/ 初期セットアップを開始する",
   "when": {
     "type": "userTriggered"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "新規プロジェクトのセットアップを開始します。\n\nまずプロダクトの概要・目的・ターゲットユーザーを教えてください。\n\n内容が確認できたら、docs/ 配下に以下の 6 ドキュメントを順番に作成します。\n各ファイルを作成するたびにユーザーの確認を得てから次へ進んでください。\n\n1. product-requirements.md — プロダクト要求定義書\n2. functional-design.md — 機能設計書\n3. architecture.md — 技術仕様書\n4. repository-structure.md — リポジトリ構造定義書\n5. development-guidelines.md — 開発ガイドライン\n6. glossary.md — ユビキタス言語定義\n\n6 ファイルの作成後、.kiro/steering/ の以下のファイルを実際のプロジェクト内容で更新してください：\n- product.md（プロダクト名・目的・docs/ 一覧）\n- tech.md（技術スタック・OS 別セットアップ手順）\n- structure.md（プロジェクトのディレクトリ構造）"
+    "prompt": "新規プロジェクトのセットアップを開始します。\n\nまず `docs/ideas/` 配下のファイルを読んでください。なければプロダクトの概要・目的・ターゲットユーザーをユーザーに質問してください。\n\n内容が確認できたら、docs/ 配下に以下の 6 ドキュメントを順番に作成します。\n\n1. product-requirements.md — プロダクト要求定義書\n2. functional-design.md — 機能設計書\n3. architecture.md — 技術仕様書\n4. repository-structure.md — リポジトリ構造定義書\n5. development-guidelines.md — 開発ガイドライン\n6. glossary.md — ユビキタス言語定義\n\n【承認ゲート（全ドキュメント共通）】各ドキュメントの作成後、必ず次の選択肢を提示してユーザーの回答を待つこと：\n1. 承認して次へ\n2. 修正を指示する（修正点を聞き、反映後に再度この確認を行う）\n3. このドキュメントをスキップ（既定テンプレートのまま残し、次のステップへ）\n\nただし product-requirements.md は以降すべてのドキュメントの土台になるため、スキップ選択肢は提示しないこと（承認/修正の2択）。承認を得る前に次のドキュメントの作成を始めてはいけません。\n\n6 ファイルの作成後、.kiro/steering/ の以下のファイルを実際のプロジェクト内容で更新してください：\n- product.md（プロダクト名・目的・docs/ 一覧）\n- tech.md（技術スタック・OS 別セットアップ手順）\n- structure.md（プロジェクトのディレクトリ構造）"
   }
 }
