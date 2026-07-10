@@ -1,6 +1,7 @@
 {
+  "version": "1.0.0",
+  "enabled": true,
   "name": "setup-project",
-  "version": "2.0.0",
   "description": "新規プロジェクトの docs/ 初期セットアップを開始する",
   "when": {
     "type": "userTriggered"

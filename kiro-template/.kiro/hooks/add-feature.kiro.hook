@@ -1,6 +1,7 @@
 {
+  "version": "1.0.0",
+  "enabled": true,
   "name": "add-feature",
-  "version": "2.0.0",
   "description": "新機能の SDD フローを開始する（計画承認後・完全自動実行モード）",
   "when": {
     "type": "userTriggered"

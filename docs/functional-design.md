@@ -113,9 +113,9 @@ graph TB
 | CLAUDE.md 技術スタック固有層 | `.kiro/steering/tech.md` | ✅ 完全移植 | inclusion: always |
 | `docs/` 永続ドキュメント群 | `docs/` | ✅ 完全移植 | 構造は同一 |
 | `.steering/YYYYMMDD-xxx/` 作業単位スペック | `.steering/YYYYMMDD-xxx/`（同一構造） | ✅ 完全移植 | Kiro built-in specs は使用しない |
-| `settings.json` hooks（Stop） | `.kiro/hooks/` (`when.type: agentStop`) | ✅ 移植済み | tasklist-check.json。機械的ブロックではなく、応答完了ごとの継続指示注入で翻訳（agentStop のブロック能力は Kiro 公式ドキュメントで文書化されていないため依存しない）。PostToolUse のリマインドフックは対応外（agentStop で毎ターン確認されるため役割が重複） |
+| `settings.json` hooks（Stop） | `.kiro/hooks/` (`when.type: agentStop`) | ✅ 移植済み | tasklist-check.kiro.hook。機械的ブロックではなく、応答完了ごとの継続指示注入で翻訳（agentStop のブロック能力は Kiro 公式ドキュメントで文書化されていないため依存しない）。PostToolUse のリマインドフックは対応外（agentStop で毎ターン確認されるため役割が重複） |
 | `.mcp.json` MCP 設定 | `.kiro/settings/mcp.json` | ✅ 完全移植 | パス・形式が異なる |
-| `.claude/commands/` スラッシュコマンド | `.kiro/hooks/` (`when.type: userTriggered`) + `.kiro/steering/`（詳細手順） | ✅ 移植済み | add-feature.json / setup-project.json。引数渡し不可のためプロンプト内で問い返す。詳細手順は JSON に押し込めず manual steering（`#skill-add-feature` 等）に置く。review-docs は個別移植せず `@doc-reviewer` の直接呼び出しで代替 |
+| `.claude/commands/` スラッシュコマンド | `.kiro/hooks/` (`when.type: userTriggered`) + `.kiro/steering/`（詳細手順） | ✅ 移植済み | add-feature.kiro.hook / setup-project.kiro.hook。引数渡し不可のためプロンプト内で問い返す。詳細手順は JSON に押し込めず manual steering（`#skill-add-feature` 等）に置く。review-docs は個別移植せず `@doc-reviewer` の直接呼び出しで代替 |
 | `.claude/skills/` on-demand 指示書 | `.kiro/steering/` (`inclusion: manual`) | ✅ 移植済み | チャットで `#ファイル名` と入力してロード。skill-sdd-guide / skill-doc-writing / skill-add-feature / skill-distill。1:1 移植ではなく、文書作成系スキル群（PRD・機能設計・アーキテクチャ等）は skill-doc-writing に統合 |
 | `.claude/agents/` サブエージェント | `.kiro/agents/` カスタムエージェント | ✅ 移植済み | `@エージェント名` で呼び出し。implementation-validator / doc-reviewer |
 | `memory/` 永続メモリ（記憶層） | **適用しない** | — | Kiro にセッション横断のネイティブ永続メモリ機構がないため、CLAUDE.md 汎用層の「記憶層の運用」は Kiro 版には適用しない。「memory/ の代替設計」セクションの steering / docs への記述で代替する |

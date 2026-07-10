@@ -1,6 +1,7 @@
 {
+  "version": "1.0.0",
+  "enabled": true,
   "name": "tasklist-check",
-  "version": "2.0.0",
   "description": "エージェントの応答完了時に、最新の作業スペックの tasklist.md に未完了タスクが残っていないか確認する",
   "when": {
     "type": "agentStop"
