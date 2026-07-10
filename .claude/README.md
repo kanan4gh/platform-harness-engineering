@@ -7,7 +7,11 @@
 ```
 .claude/
 ├── README.md              # このファイル
-├── settings.json          # Claude Code設定（パーミッション等）
+├── settings.json          # Claude Code設定（パーミッション・フック登録）
+├── hooks/                 # フックスクリプト（検証層: 規律の機械的強制）
+│   ├── check_tasklist_complete.py   # Stopフック
+│   ├── remind_tasklist_update.py    # PostToolUseフック
+│   └── state/             # 揮発状態（Git管理外）
 ├── commands/              # スラッシュコマンド（/コマンド名で呼び出す）
 │   ├── setup-project.md   # /setup-project
 │   ├── add-feature.md     # /add-feature
@@ -17,6 +21,7 @@
 │   └── implementation-validator.md
 └── skills/                # スキル定義（Skill()で呼び出す）
     ├── steering/
+    ├── distill/
     ├── prd-writing/
     ├── functional-design/
     ├── architecture-design/
@@ -29,28 +34,25 @@
 
 ## settings.json
 
-```json
-{
-  "defaultMode": "bypassPermissions",
-  "permissions": {
-    "allow": [
-      "Skill(prd-writing)",
-      "Skill(functional-design)",
-      "Skill(architecture-design)",
-      "Skill(repository-structure)",
-      "Skill(development-guidelines)",
-      "Skill(glossary-creation)"
-    ]
-  }
-}
-```
+パーミッション(スキル8つ+検証系・読み取り系コマンドのallow)とフック2つを登録している。
+
+**設計方針**: `defaultMode` は設定しない(通常モード)。「読み取り・検証=自動 / 書き込み・外部操作=都度確認」の境界で allow リストを構成する。完全自動実行フロー(`/add-feature`)と bypassPermissions の組み合わせはガードレールゼロになるため採用しない。allow の追加は `/fewer-permission-prompts` による実績ベースで行う。
 
 ### 設定の意味
 
 | 項目 | 値 | 説明 |
 |------|----|------|
-| `defaultMode` | `bypassPermissions` | Claudeがツールを実行する際のパーミッション確認をスキップ。ドキュメント作成スキルの連続実行をスムーズにするため |
-| `permissions.allow` | スキル6つ | 上記6つのスキルは確認なしに自動実行される |
+| `permissions.allow` | スキル8つ | ドキュメント作成6+steering+distillは確認なしに実行される |
+| `permissions.allow` | `uv run pytest*` 等の検証系、`git status/diff/log` の読み取り系 | 副作用のないコマンドのみ自動実行 |
+| `hooks.Stop` | check_tasklist_complete.py | 最新ステアリングのtasklist.mdに未完了タスク(`[ ]`)が残っているとセッション終了をブロック |
+| `hooks.PostToolUse` | remind_tasklist_update.py | Edit/Writeが5回続いてもtasklist.mdが更新されない場合にリマインドを注入(非強制) |
+
+### フック（hooks/）
+
+プロセス規律を「プロンプトによるお願い」ではなく「機構による強制」で担保する検証層。設計方針は `docs/architecture.md`(標準ライブラリのみ・fail-open・純関数分離)を参照。
+
+- フックの追加は「スクリプト+テスト(`tests/hooks/`)+settings.json登録」の3点セットで行う
+- テストは `uv run pytest` で実行する
 
 ### settings.local.json について
 
@@ -70,8 +72,8 @@
 
 **動作フロー**:
 1. `docs/ideas/` 内のファイルを読み込み、インプットとして利用
-2. `prd-writing` スキルで `docs/product-requirements.md` を作成（ユーザー承認待ち）
-3. 以降、`functional-design` → `architecture-design` → `repository-structure` → `development-guidelines` → `glossary-creation` の順に自動実行
+2. `prd-writing` スキルで `docs/product-requirements.md` を作成し、**AskUserQuestionで承認確認**（承認/修正の選択式。PRDはスキップ不可）
+3. 以降、`functional-design` → `architecture-design` → `repository-structure` → `development-guidelines` → `glossary-creation` の順に作成し、各ドキュメントごとにAskUserQuestionで承認確認（承認して次へ/修正を指示する/スキップ）
 
 **カスタマイズ方法**: `commands/setup-project.md` の「ステップ」を編集することで、作成するドキュメントの順序・内容を変更できます。
 
@@ -87,16 +89,19 @@
 ```
 
 **動作フロー**:
-1. `.steering/YYYYMMDD-機能名/` ディレクトリを作成
-2. `steering` スキル（計画モード）でステアリングファイル3点を生成
-3. `tasklist.md` の全タスクが完了するまで実装ループを自動実行
-4. `implementation-validator` エージェントで品質検証
-5. テスト・lint・型チェックを実行
-6. `steering` スキル（振り返りモード）で振り返りを記録
+1. worktree+フィーチャーブランチを作成し作業を隔離（mainを汚さない機構的担保）
+2. `.steering/YYYYMMDD-機能名/` ディレクトリを作成
+3. ビルトイン `Explore` エージェントで既存パターンを調査
+4. ビルトイン `Plan` エージェントの実装計画を下敷きに、`steering` スキル（計画モード）でステアリングファイル3点を生成
+5. **計画をプランモードで提示し、ユーザー承認を得る**（このワークフロー唯一の承認ゲート）
+6. 承認後、`tasklist.md` の全タスクが完了するまで実装ループを自動実行
+7. 4段検証を実行（段1: pytest/ruff/basedpyright → 段2: 変更種別に応じた実挙動確認 → 段3: `/code-review` → 段4: `implementation-validator`＋docsを変更した場合は `doc-reviewer` を並列起動）
+8. `steering` スキル（振り返りモード）で振り返りを記録
+9. コミット→push→PR作成→worktree後片付け（マージはユーザー判断）
 
-**重要な設計思想**: このコマンドはユーザーの介入なしに最初から最後まで自動実行するよう設計されています。`tasklist.md` の全タスク完了が完了条件です。
+**重要な設計思想**: **「計画は承認必須・実装は自動」**。承認ゲートは計画提示の1箇所だけで、承認後はユーザーの介入なしに完了まで自動実行されます。`tasklist.md` の全タスク完了・4段検証のパス・PR作成が完了条件です。ビルトインエージェント／worktree／プランモードが使えない環境向けのフォールバックが各ステップに定義されています。
 
-**カスタマイズ方法**: ステップ7「自動テストの実行」のコマンドを、プロジェクトのテストコマンドに合わせて変更してください（デフォルトは `npm test`）。
+**カスタマイズ方法**: 他の技術スタックのプロジェクトへ複製する場合は、ステップ6・段1のコマンド（現在は `uv run pytest` 等）をそのスタックの検証コマンドに変更してください。
 
 ---
 
@@ -120,6 +125,25 @@
 
 サブエージェントは専用のコンテキストで動作するため、メインエージェントのコンテキストを消費しません。`/add-feature` や `/review-docs` コマンドから自動的に起動されます。
 
+### モデル配分表
+
+役割ごとに必要な能力とトークン消費のプロファイルが異なるため、以下の配分を既定とする:
+
+| 役割 | 担当 | モデル | 根拠 |
+|------|------|--------|------|
+| 統合・判断・実装 | メインエージェント | ユーザー選択（最上位推奨） | 全体文脈の保持と最終判断の質が成果物の質を決める |
+| 調査 | `Explore`（ビルトイン） | sonnet（起動時に指定） | 大量のファイルを読む=トークン消費大、判断は浅い |
+| 計画 | `Plan`（ビルトイン） | 既定（メイン継承） | 計画の質は判断力に依存する |
+| 判断を伴うレビュー | doc-reviewer / implementation-validator | sonnet（frontmatterで明示） | スコープ限定の深い推論。**著者(メイン)と別モデルにすることで誤り相関を低減する狙いも含む** |
+| 軽量な形式チェック | （将来追加時） | haiku | 定型判定に高い判断力は不要 |
+| 蒸留の分類 | `/distill` 実行主体 | 既定 | 環流はプラットフォーム全体に波及するため、上位モデルのセッションでの実行を推奨 |
+
+**根拠の要点**:
+- **コスト構造**: トークンを大量に消費する仕事（調査）を軽いモデルへ、高価なモデルには結論だけを渡す。メインの記憶も調査ノイズで埋まらない
+- **モデル多様性**: 同一モデルは同じ盲点を持ちやすい。検証を著者と別モデルに担わせると、著者が「自然」と思い込んだ誤りを拾える（実例: メインの実装に混入した観点名の用語ゆれを、Sonnet製validatorが検出）
+
+調査・計画はビルトインの `Explore` / `Plan` エージェントを優先し、同等の自作エージェントを作らない（ビルトイン優先原則）。
+
 ### `doc-reviewer`
 
 - **モデル**: Claude Sonnet
@@ -129,8 +153,8 @@
 ### `implementation-validator`
 
 - **モデル**: Claude Sonnet
-- **用途**: `/add-feature` コマンドの実装後検証フェーズで呼び出される。スペック準拠・コード品質・テストカバレッジ・セキュリティ・パフォーマンスを検証する
-- **自動実行ツール**: lint・型チェック・テスト・ビルドを実行し、結果をレポートに含める
+- **用途**: `/add-feature` の4段検証・段4で呼び出される。ステアリングファイル（requirements.md / design.md / tasklist.md）と実装の整合性検証に特化
+- **非責務**: コード品質・テスト・セキュリティ・パフォーマンスは段1〜3（静的検証・`/verify`・`/code-review`）が担うため検証しない
 
 ---
 
@@ -155,7 +179,17 @@
 - `design.md` - 実装設計のひな形
 - `tasklist.md` - タスクリストのひな形
 
-**設計上の重要原則**: tasklist.mdの全タスクが `[x]` になるまで作業を継続します。スキップは技術的な理由がある場合のみ許可されます。
+**設計上の重要原則**: tasklist.mdの全タスクが `[x]` になるまで作業を継続します。スキップは技術的な理由がある場合のみ許可されます。この規律はスキル本文の記述ではなく**フック**(hooks/)が機械的に強制します(規律の配置原則)。
+
+---
+
+### `distill` スキル
+
+**用途**: 進化のサイクル「④蒸留」の半自動化。`.steering/*/tasklist.md` の振り返りを横断収集し、環流3基準(普遍性・再現性・抽象性)で分類して `.steering/distill-YYYYMMDD.md` に蒸留レポートを出力する。環流候補には platform-harness へのPR下書き(変更対象ファイル+変更案)が付く。
+
+**実行タイミング**: プロジェクトの節目、platform-harness 更新前の棚卸し、またはユーザーの指示。
+
+**重要**: PR作成の最終判断は人間が行う。スキルは候補の提示まで。処理済みディレクトリをレポートに記録するため、再実行時は未処理分のみ扱う(冪等)。
 
 ---
 
@@ -176,20 +210,22 @@
 
 ## このテンプレートをカスタマイズする場合
 
-### テストコマンドを変更する
+### テストコマンドを変更する（他スタックへの複製時）
 
-`commands/add-feature.md` のステップ7を編集します:
+現在の `commands/add-feature.md` はこのプロジェクトの技術スタック（uv/pytest/ruff/basedpyright）に合わせてあります。他のスタックのプロジェクトへ複製する場合は、ステップ6「4段検証」の段1を編集します:
 
 ```markdown
-## ステップ7: 自動テストの実行
+### 段1: 静的検証
 
 1. 以下のコマンドを順番に実行し...
   ```bash
-  Bash('uv run pytest')       # ← Python/uvの場合
-  Bash('uv run ruff check')
-  Bash('uv run basedpyright')
+  Bash('npm test')            # ← Node.jsの場合の例
+  Bash('npm run lint')
+  Bash('npm run typecheck')
   ```
 ```
+
+**注意**: 技術スタック定義（CLAUDE.md）と検証コマンドの不整合は検証層を無効化します。複製時のチェックリストに含めてください。
 
 ### 新しいスキルを追加する
 
