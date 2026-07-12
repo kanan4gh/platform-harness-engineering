@@ -23,16 +23,17 @@ jobs:
         id: list
         env:
           REQUESTED: ${{ github.event.inputs.template }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
 
           # 単一テンプレートの手動再配布
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${REQUESTED}" != "all" ]; then
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ "${REQUESTED}" != "all" ]; then
             if [ ! -d "${REQUESTED}-template" ]; then
               echo "Template directory '${REQUESTED}-template' not found." >&2
               exit 1
             fi
-            TEMPLATES=$(printf '%s\n' "${REQUESTED}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            TEMPLATES=$(jq -n -c --arg t "${REQUESTED}" '[$t]')
           else
             # リリース公開時 / dispatch(all): *-template/ を走査して全件配布する
             TEMPLATES=$(
@@ -65,13 +66,16 @@ jobs:
       - name: Clone output repo
         env:
           PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+          TEMPLATE: ${{ matrix.template }}
         run: |
-          OUTPUT_REPO="platform-harness-for-${{ matrix.template }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
           git clone "https://x-access-token:${PUBLISH_PAT}@github.com/kanan4gh/${OUTPUT_REPO}.git" /tmp/output-repo
 
       - name: Copy template contents to output repo
+        env:
+          TEMPLATE: ${{ matrix.template }}
         run: |
-          SOURCE_DIR="${{ matrix.template }}-template"
+          SOURCE_DIR="${TEMPLATE}-template"
 
           # Copy all contents including dotfiles/directories
           rsync -av --delete \
@@ -79,11 +83,13 @@ jobs:
             "${SOURCE_DIR}/" /tmp/output-repo/
 
       - name: Commit and push
-        id: publish
         env:
           PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+          TEMPLATE: ${{ matrix.template }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          OUTPUT_REPO="platform-harness-for-${{ matrix.template }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
 
           cd /tmp/output-repo
           git config user.name "github-actions[bot]"
@@ -96,32 +102,35 @@ jobs:
             exit 0
           fi
 
-          if [ "${{ github.event_name }}" = "release" ]; then
-            MSG="chore: publish ${{ github.ref_name }}"
+          if [ "${EVENT_NAME}" = "release" ]; then
+            MSG="chore: publish ${REF_NAME}"
           else
             MSG="chore: publish template (manual dispatch)"
           fi
 
           git commit -m "${MSG}"
           git push "https://x-access-token:${PUBLISH_PAT}@github.com/kanan4gh/${OUTPUT_REPO}.git" main
-          echo "published=true" >> $GITHUB_OUTPUT
 
       - name: Create release on output repo
         if: github.event_name == 'release'
         env:
           PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
+          TEMPLATE: ${{ matrix.template }}
+          REF_NAME: ${{ github.ref_name }}
+          RELEASE_TITLE: ${{ github.event.release.name }}
         run: |
-          OUTPUT_REPO="platform-harness-for-${{ matrix.template }}"
+          OUTPUT_REPO="platform-harness-for-${TEMPLATE}"
+          export GH_TOKEN="${PUBLISH_PAT}"
 
           # 再実行時に同一タグのリリースが既にある場合はスキップする
-          if GH_TOKEN="${PUBLISH_PAT}" gh release view "${{ github.ref_name }}" --repo "kanan4gh/${OUTPUT_REPO}" >/dev/null 2>&1; then
-            echo "Release ${{ github.ref_name }} already exists on ${OUTPUT_REPO}. Skipping."
+          if gh release view "${REF_NAME}" --repo "kanan4gh/${OUTPUT_REPO}" >/dev/null 2>&1; then
+            echo "Release ${REF_NAME} already exists on ${OUTPUT_REPO}. Skipping."
             exit 0
           fi
 
-          RELEASE_NOTES=$(printf "platform-harness-engineering ${{ github.ref_name }} に対応したテンプレートです。\n\n詳細なリリースノートは https://github.com/kanan4gh/platform-harness-engineering/releases/tag/${{ github.ref_name }} を参照してください。")
+          RELEASE_NOTES=$(printf "platform-harness-engineering %s に対応したテンプレートです。\n\n詳細なリリースノートは https://github.com/kanan4gh/platform-harness-engineering/releases/tag/%s を参照してください。" "${REF_NAME}" "${REF_NAME}")
 
-          GH_TOKEN="${PUBLISH_PAT}" gh release create "${{ github.ref_name }}" \
+          gh release create "${REF_NAME}" \
             --repo "kanan4gh/${OUTPUT_REPO}" \
-            --title "${{ github.event.release.name }}" \
+            --title "${RELEASE_TITLE}" \
             --notes "${RELEASE_NOTES}"

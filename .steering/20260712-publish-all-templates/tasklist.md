@@ -36,9 +36,9 @@
   - [x] ワークフローYAMLがパース可能である(jobs: determine-templates/publish、dispatch既定=all、fail-fast=false を確認)
   - [x] matrix導出ロジックをローカル実行し `["kiro","codex"]` が得られる(bashで3ケース検証: 全件`["codex","kiro"]` / 単一`["codex"]` / 0件`[]`→exit 1経路。jqはローカル未導入のため等価Pythonで代替。ubuntu-latestにはjq標準搭載)
   - [x] `uv run pytest` / `uv run ruff check` / `uv run basedpyright` がパスする(38 passed / All checks passed / 0 errors)
-- [ ] 段2: 実挙動検証
-  - [ ] ブランチ上で `gh workflow run publish-template.yml --ref feature/publish-all-templates -f template=codex` を実行し、単一テンプレート経路が成功することを確認する(テンプレート内容に差分がないため「No changes to publish.」で終わることが期待挙動)
-  - [ ] 実行ログでmatrixジョブが1件だけ起動したことを確認する
+- [x] 段2: 実挙動検証
+  - [x] ブランチ上で `gh workflow run publish-template.yml --ref feature/publish-all-templates -f template=codex` を実行し、単一テンプレート経路が成功することを確認する(run 29181143334: 両ジョブsuccess、`No changes to publish.` を出力。配布先の最新コミットはv0.6.0同期時のままで汚染なしを確認)
+  - [x] 実行ログでmatrixジョブが1件だけ起動したことを確認する(`Publishing templates: ["codex"]` / ジョブは `publish (codex)` の1件のみ)
 - [ ] 段3: `Skill('code-review')` を実行し、正当なfindingsを修正する
 - [ ] 段4: `implementation-validator` を起動し、指摘に対応する
 
