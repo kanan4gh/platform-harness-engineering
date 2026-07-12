@@ -47,8 +47,8 @@
 ## フェーズ4: 振り返り・PR
 
 - [x] 実装後の振り返りを記録する(このファイル下部)
-- [ ] 全変更をコミットする(Conventional Commits・`Closes #48`)
-- [ ] ブランチをpushし、PRを作成してURLを報告する
+- [x] 全変更をコミットする(Conventional Commits・`Closes #48`)
+- [x] ブランチをpushし、PRを作成してURLを報告する(https://github.com/kanan4gh/platform-harness-engineering/pull/49)
 
 ---
 
